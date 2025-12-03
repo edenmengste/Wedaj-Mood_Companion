@@ -1,8 +1,8 @@
-public class NeutralResponse extends MoodResponse 
-{
+package com.wedaj.core;
+
+public class NeutralResponse extends MoodResponse {
     @Override
-    public String reply() 
-    {
-        return "🙂 Thanks for sharing. Tell me more!";
+    public String reply() {
+        return "Neutral response"; 
     }
 }
