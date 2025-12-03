@@ -1,4 +1,6 @@
-public abstract class MoodResponse 
-{
-    public abstract String reply();
+package com.wedaj.core;
+
+
+public abstract class MoodResponse implements Responder {
 }
+
