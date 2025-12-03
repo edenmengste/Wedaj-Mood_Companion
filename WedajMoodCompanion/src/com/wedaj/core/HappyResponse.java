@@ -1,8 +1,8 @@
-public class HappyResponse extends MoodResponse 
-{
+package com.wedaj.core;
+
+public class HappyResponse extends MoodResponse {
     @Override
-    public String reply() 
-    {
-        return "😊 I'm glad to hear that! Keep smiling!";
+    public String reply() {
+        return "Happy response"; 
     }
 }
