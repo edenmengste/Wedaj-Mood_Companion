@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "TestFX",
+      "request": "launch",
+      "mainClass": "TestFX",
+      "projectName": "wedaj-chat-bot"
+    },
+    {
+      "type": "java",
+      "name": "Launch Wedaj Chat Bot",
+      "request": "launch",
+      "mainClass": "Main",
+      "vmArgs": "--module-path lib --add-modules javafx.controls,javafx.fxml"
+    }
+  ]
+}
