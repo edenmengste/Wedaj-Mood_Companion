@@ -5,58 +5,86 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class Main extends Application {
 
+    //State & UI Components
     private boolean isDarkMode = false;
-    private VBox chatBox; 
-    private BorderPane root;
+    private VBox chatBox, loginView;
+    private BorderPane chatView;
     private VBox topBox;
     private Label lblTitle, lblMood;
     private TextField txtInput;
-    private ChatBot bot = new ChatBot();
+    private ChatBot bot = new ChatBot(); 
 
     @Override
     public void start(Stage stage) {
         stage.setTitle("Wedaj - Your Mood Companion");
 
-        //MESSAGE DISPLAY CONTAINER (The whole chat area) ---
+        // 1. LOGIN INTERFACE (Starting Screen)
+        Label lblLoginTitle = new Label("Wedaj Mood Companion 😊");
+        lblLoginTitle.setStyle("-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: white;");
+
+        TextField txtEmail = new TextField();
+        txtEmail.setPromptText("Email");
+        txtEmail.setMaxWidth(300);
+        txtEmail.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;");
+
+        PasswordField txtPass = new PasswordField();
+        txtPass.setPromptText("Password");
+        txtPass.setMaxWidth(300);
+        txtPass.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;");
+
+        Button btnLogin = new Button("Sign Up / Login");
+        btnLogin.setPrefWidth(300);
+        btnLogin.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;");
+
+        loginView = new VBox(20, lblLoginTitle, txtEmail, txtPass, btnLogin);
+        loginView.setAlignment(Pos.CENTER);
+        loginView.setStyle("-fx-background-color: #0d1117;"); // Dark Blue-Black
+
+        //CHAT INTERFACE (Hidden initially)
         chatBox = new VBox(15);
         chatBox.setPadding(new Insets(15));
-        //ScrollPane allows the user to scroll through the message history
+        
         ScrollPane scrollPane = new ScrollPane(chatBox);
         scrollPane.setFitToWidth(true);
+        // Ensure the scroll pane scrolls to the bottom when new messages arrive
+        chatBox.heightProperty().addListener((obs, oldVal, newVal) -> scrollPane.setVvalue(1.0));
         scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
 
-        //Top Navigation & Status Bar
+        // Top Navigation
         Button btnNewChat = new Button("+ New Chat");
         btnNewChat.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-background-radius: 20; -fx-cursor: hand;");
         
         lblTitle = new Label("Wedaj AI");
         lblTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16px;");
-        
         lblMood = new Label("Mood: —");
         
         Button btnTheme = new Button("🌙");
         btnTheme.setStyle("-fx-background-radius: 20; -fx-cursor: hand;");
         
-        //Layout for top elements: New Chat, Title, Mood, and Theme Toggle
         HBox topContent = new HBox(15, btnNewChat, lblTitle, lblMood, new Region(), btnTheme);
-        HBox.setHgrow(topContent.getChildren().get(4), Priority.ALWAYS); 
+        HBox.setHgrow(topContent.getChildren().get(3), Priority.ALWAYS); 
         topContent.setAlignment(Pos.CENTER_LEFT);
         
         topBox = new VBox(topContent);
         topBox.setPadding(new Insets(15));
         topBox.setStyle("-fx-background-color: white; -fx-border-color: #EEE; -fx-border-width: 0 0 1 0;");
 
-        //Bottom Message Input Area 
+        // Bottom Bar
         txtInput = new TextField();
-        txtInput.setPromptText("Type your message...");
+        txtInput.setPromptText("How are you feeling today?");
         txtInput.setPrefHeight(45);
-        txtInput.setStyle("-fx-background-radius: 25; -fx-border-radius: 25; -fx-border-color: #34495e; -fx-border-width: 1.5; -fx-padding: 0 15 0 15; -fx-background-color: white;");
-
+        txtInput.setStyle("-fx-background-color: transparent; " +
+                  "-fx-border-color: #34495e; " + 
+                  "-fx-border-width: 1.5; " +
+                  "-fx-border-radius: 25; " +
+                  "-fx-background-radius: 25; " + 
+                  "-fx-padding: 0 15 0 15;");        
         Button btnSend = new Button("Send");
         btnSend.setPrefHeight(45);
         btnSend.setPrefWidth(80);
@@ -64,27 +92,35 @@ public class Main extends Application {
 
         HBox inputBar = new HBox(10, txtInput, btnSend);
         inputBar.setPadding(new Insets(20));
-        inputBar.setAlignment(Pos.CENTER);
         HBox.setHgrow(txtInput, Priority.ALWAYS);
 
-        //Scene Assembly
-        root = new BorderPane();
-        root.setTop(topBox);
-        root.setCenter(scrollPane);
-        root.setBottom(inputBar);
-        root.setStyle("-fx-background-color: #F5F7F9;");
+        chatView = new BorderPane();
+        chatView.setTop(topBox);
+        chatView.setCenter(scrollPane);
+        chatView.setBottom(inputBar);
+        chatView.setVisible(false);
 
-        //Event Listeners
-        btnNewChat.setOnAction(e -> chatBox.getChildren().clear());
-        btnTheme.setOnAction(e -> toggleTheme(btnTheme));
+        // Enter Key for Login
+        txtPass.setOnKeyPressed(e -> { if(e.getCode() == KeyCode.ENTER) btnLogin.fire(); });
+
+        // Login Action
+        btnLogin.setOnAction(e -> {
+            loginView.setVisible(false);
+            chatView.setVisible(true);
+        });
+
+        // Chat Actions
         btnSend.setOnAction(e -> handleSendMessage());
         txtInput.setOnAction(e -> btnSend.fire());
+        btnNewChat.setOnAction(e -> chatBox.getChildren().clear());
+        btnTheme.setOnAction(e -> toggleTheme(btnTheme));
 
-        stage.setScene(new Scene(root, 800, 600));
+        // Start App
+        StackPane rootContainer = new StackPane(chatView, loginView);
+        stage.setScene(new Scene(rootContainer, 800, 600));
         stage.show();
     }
 
-    // Handles the processing of sent messages and simulated bot delay
     private void handleSendMessage() {
         String msg = txtInput.getText().trim();
         if (!msg.isEmpty()) {
@@ -101,7 +137,6 @@ public class Main extends Application {
         }
     }
 
-    // Creates and adds a chat bubble to the UI with copy/edit functionality
     private void addBubble(String text, boolean isUser) {
         StackPane bubbleStack = new StackPane();
         Label lbl = new Label(text);
@@ -109,25 +144,22 @@ public class Main extends Application {
         lbl.setMaxWidth(400);
         applyBubbleStyle(lbl, isUser);
 
-        // Sets icon color to remain visible during theme changes
         String iconColor = isDarkMode ? "#CCC" : "#666";
-
         Button btnCopy = new Button("❐"); 
-        btnCopy.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14; -fx-text-fill: " + iconColor + ";");
+        btnCopy.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: " + iconColor + ";");
         
         HBox actionBar = new HBox(5, btnCopy);
-        actionBar.setVisible(false); // Icons hidden until hover
+        actionBar.setVisible(false);
         actionBar.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
         if (isUser) {
             Button btnEdit = new Button("✎");
-            btnEdit.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 14; -fx-text-fill: " + iconColor + ";");
+            btnEdit.setStyle("-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: " + iconColor + ";");
             actionBar.getChildren().add(btnEdit);
 
-            // Re-branching Logic: Removes old bot replies when a user edits an old message
             btnEdit.setOnAction(e -> {
                 TextField editField = new TextField(lbl.getText());
-                editField.setStyle("-fx-background-radius: 15; -fx-border-color: #34495e; -fx-border-radius: 15;");
+                editField.setStyle("-fx-background-radius: 15; -fx-border-color: #34495e;");
                 bubbleStack.getChildren().setAll(editField);
                 
                 editField.setOnAction(ev -> {
@@ -135,6 +167,7 @@ public class Main extends Application {
                     lbl.setText(newText);
                     bubbleStack.getChildren().setAll(lbl);
                     
+                    // Smart Re-branching: remove all messages AFTER this one
                     int index = chatBox.getChildren().indexOf(bubbleStack.getParent().getParent());
                     if (index != -1 && index < chatBox.getChildren().size() - 1) {
                         chatBox.getChildren().remove(index + 1, chatBox.getChildren().size());
@@ -146,7 +179,6 @@ public class Main extends Application {
             });
         }
 
-        // Copy text to system clipboard
         btnCopy.setOnAction(e -> {
             ClipboardContent content = new ClipboardContent();
             content.putString(lbl.getText());
@@ -158,14 +190,12 @@ public class Main extends Application {
         HBox wrapper = new HBox(vContainer);
         wrapper.setAlignment(isUser ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
-        // Hover effect to show/hide Edit and Copy buttons
         wrapper.setOnMouseEntered(e -> actionBar.setVisible(true));
         wrapper.setOnMouseExited(e -> actionBar.setVisible(false));
 
         chatBox.getChildren().add(wrapper);
     }
 
-    // Controls the visual style of chat bubbles based on sender and theme
     private void applyBubbleStyle(Label lbl, boolean isUser) {
         if (isUser) {
             lbl.setStyle("-fx-background-color: #34495e; -fx-text-fill: white; -fx-padding: 10 15; -fx-background-radius: 18;");
@@ -176,28 +206,28 @@ public class Main extends Application {
         }
     }
 
-    // Swaps colors for all UI elements and updates existing chat bubbles
     private void toggleTheme(Button btn) {
         isDarkMode = !isDarkMode;
         String iconColor = isDarkMode ? "#CCC" : "#666";
 
         if (isDarkMode) {
-            root.setStyle("-fx-background-color: #121212;");
+            chatView.setStyle("-fx-background-color: #121212;");
             topBox.setStyle("-fx-background-color: #1e1e1e; -fx-border-color: #333;");
             lblTitle.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
             lblMood.setStyle("-fx-text-fill: #bdc3c7;");
-            txtInput.setStyle("-fx-background-color: #2c2c2c; -fx-text-fill: white; -fx-background-radius: 25; -fx-border-color: #34495e; -fx-border-radius: 25; -fx-border-width: 1.5;");
+            // Set background to transparent in Dark Mode
+            txtInput.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-background-radius: 25; -fx-border-color: #34495e; -fx-border-radius: 25; -fx-border-width: 1.5; -fx-padding: 0 15 0 15;");
             btn.setText("☀️");
         } else {
-            root.setStyle("-fx-background-color: #F5F7F9;");
+            chatView.setStyle("-fx-background-color: #F5F7F9;");
             topBox.setStyle("-fx-background-color: white; -fx-border-color: #F0F0F0;");
             lblTitle.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
             lblMood.setStyle("-fx-text-fill: black;");
-            txtInput.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-background-radius: 25; -fx-border-color: #34495e; -fx-border-radius: 25; -fx-border-width: 1.5;");
+            // Set background to transparent in Light Mode
+            txtInput.setStyle("-fx-background-color: transparent; -fx-text-fill: black; -fx-background-radius: 25; -fx-border-color: #34495e; -fx-border-radius: 25; -fx-border-width: 1.5; -fx-padding: 0 15 0 15;");
             btn.setText("🌙");
         }
 
-        // Loop through current messages to apply the new theme colors immediately
         chatBox.getChildren().forEach(n -> {
             HBox h = (HBox) n;
             VBox v = (VBox) h.getChildren().get(0);
@@ -207,13 +237,7 @@ public class Main extends Application {
             if (s.getChildren().get(0) instanceof Label) {
                 applyBubbleStyle((Label) s.getChildren().get(0), h.getAlignment() == Pos.CENTER_RIGHT);
             }
-
-            // Update action icon colors for the new theme
-            actions.getChildren().forEach(node -> {
-                if (node instanceof Button) {
-                    node.setStyle(node.getStyle() + "-fx-text-fill: " + iconColor + ";");
-                }
-            });
+            actions.getChildren().forEach(node -> node.setStyle(node.getStyle() + "-fx-text-fill: " + iconColor + ";"));
         });
     }
 
