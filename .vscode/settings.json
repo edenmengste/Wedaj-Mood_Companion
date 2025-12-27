@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.windows": {
+    "PATH_TO_FX": "C:/javafx-sdk-25.0.1/lib"
+  }
+}
