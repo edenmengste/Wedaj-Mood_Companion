@@ -129,7 +129,7 @@ public class MoodAnalyzer {
         if (containsAny(t, new String[]{"hi", "hello", "hey", "yo", "sup"})) return Mood.Greeting;
         if (containsAny(t, new String[]{"tired", "exhausted", "sleepy", "drained"})) return Mood.Tired;
         if (containsAny(t, new String[]{"worried", "anxious", "stressed"})) return Mood.Anxious;
-        if (containsAny(t, new String[]{"sad", "died", "die", "loss", "grief"})) return Mood.Sad;
+        if (containsAny(t, new String[]{"sad", "died", "die", "loss", "depressed","grief", "brokeup"})) return Mood.Sad;
         if (containsAny(t, new String[]{"happy", "glad"})) return Mood.Happy;
         return Mood.Neutral;
     }
