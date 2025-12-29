@@ -26,14 +26,23 @@ public class ChatBot {
     }
 
     public Result reply(String userMessage, String username) {
+        // 1. Detect the mood first
         Mood mood = moodAnalyzer.detectMood(userMessage);
 
-        // Capture memory for this user
+        // 2. Get the memory for this specific user
         Memory memory = getMemoryForUser(username);
+        
+        // 3. Let memory try to capture a fact or prepare a recall answer
         memory.captureFacts(userMessage);
+        String recalledFact = memory.recall();
 
+        // 4. Logic: If memory has a specific answer 
+        if (!recalledFact.isEmpty()) {
+            return new Result(recalledFact, mood);
+        }
+
+        // 5. Fallback: If no memory fact was triggered, use the standard generator
         ResponseGenerator.MoodResponse response = responseGenerator.getResponse(mood, userMessage);
-        return new Result(response.reply() +
-                (memory.recall().isEmpty() ? "" : "\n" + memory.recall()), mood);
+        return new Result(response.reply(), mood);
     }
 }

@@ -10,39 +10,45 @@ public class Memory {
     public void captureFacts(String message) {
         if (message == null || message.isBlank()) return;
 
+        // Use t for comparisons, but we extract from the original message casing
         String t = message.toLowerCase().trim();
 
-        if (t.startsWith("my name is ")) {
-            String name = message.substring(11).trim();
+        // Robust name detection
+        if (t.contains("my name is ")) {
+            int index = t.indexOf("my name is ") + "my name is ".length();
+            String name = message.substring(index).trim();
             store.put("name", name);
             lastReply = "Nice to meet you, " + name + " 🙂";
             return;
         }
 
-        if (t.startsWith("remember that i like ")) {
-            String like = message.substring("remember that i like ".length()).trim();
+        // Robust "likes" detection
+        if (t.contains("i like ")) {
+            int index = t.indexOf("i like ") + "i like ".length();
+            String like = message.substring(index).trim();
             store.put("like", like);
             lastReply = "Got it. I’ll remember you like " + like + " 📝";
             return;
         }
 
-        if (t.equals("what's my name?") || t.equals("whats my name?")) {
+        // Question handling
+        if (t.contains("what") && t.contains("my name")) {
             String n = store.get("name");
             lastReply = (n != null)
                     ? "You told me your name is " + n + " 🙂"
-                    : "I don’t have your name yet.";
+                    : "I don’t know your name yet. What is it?";
             return;
         }
 
-        if (t.equals("what do i like?")) {
+        if (t.contains("what") && t.contains("i like")) {
             String l = store.get("like");
             lastReply = (l != null)
-                    ? "You like " + l + " 🌟"
-                    : "I don’t have that yet.";
+                    ? "You mentioned you like " + l + " 🌟"
+                    : "I don’t recall you mentioning your interests yet.";
             return;
         }
 
-        if (t.equals("reset memory")) {
+        if (t.equals("reset memory") || t.contains("forget everything")) {
             store.clear();
             lastReply = "Memory reset 🧹";
             return;
@@ -55,4 +61,3 @@ public class Memory {
         return lastReply;
     }
 }
-
